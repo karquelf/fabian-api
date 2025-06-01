@@ -64,23 +64,9 @@ func callMcpTool() {
 	defer mcpServer.Process.Kill()
 
 	buf := make([]byte, 1024)
-	resultCh := make(chan []byte)
-	errCh := make(chan error)
-
-	go func() {
-		n, err := stdout.Read(buf)
-		if n > 0 {
-			resultCh <- buf[:n]
-		} else {
-			resultCh <- nil
-		}
-		errCh <- err
-	}()
-
-	timeout := time.After(30 * time.Second)
+	timeout := time.After(10 * time.Second)
 
 	payload := `{ "jsonrpc": "2.0", "method": "tools/call", "params": { "name": "hello_world", "arguments": { "name": "Fabien"} }, "id": 1}` + "\n"
-	// fmt.Println("Sending payload to MCP tool:", payload)
 	_, err = io.WriteString(stdin, payload)
 	if err != nil {
 		fmt.Println("Error writing to stdin:", err)
@@ -90,12 +76,14 @@ func callMcpTool() {
 
 	for {
 		select {
-		case data := <-resultCh:
-			if data != nil {
-				fmt.Print(string(data))
-				return
+		case <-timeout:
+			fmt.Println("Timeout: reading from MCP tool took more than 30 seconds")
+			return
+		default:
+			n, err := stdout.Read(buf)
+			if n > 0 {
+				fmt.Print(string(buf[:n]))
 			}
-		case err := <-errCh:
 			if err != nil {
 				if err == io.EOF {
 					return
@@ -103,9 +91,6 @@ func callMcpTool() {
 				fmt.Println("Error reading stdout:", err)
 				return
 			}
-		case <-timeout:
-			fmt.Println("Timeout: reading from MCP tool took more than 30 seconds")
-			return
 		}
 	}
 }
