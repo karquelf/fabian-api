@@ -13,7 +13,10 @@ const mcpBinary = "/Users/fabien/SideProjects/fabian-mcp-server/fabian-mcp-serve
 func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Request received:", r.Method, r.URL.Path)
-		callMcpTool()
+		list_of_tools_payload := `{ "jsonrpc": "2.0", "method": "tools/list", "params": {}, "id": 1}`
+		callMcpTool(list_of_tools_payload)
+		hellow_world_payload := `{ "jsonrpc": "2.0", "method": "tools/call", "params": { "name": "hello_world", "arguments": { "name": "Fabien"} }, "id": 1}`
+		callMcpTool(hellow_world_payload)
 		w.WriteHeader(http.StatusOK)
 	})
 
@@ -50,7 +53,7 @@ func initializeMcpServer(mcpServer *exec.Cmd) (io.WriteCloser, io.ReadCloser, er
 	return stdin, stdout, nil
 }
 
-func callMcpTool() {
+func callMcpTool(payload string) {
 	fmt.Println("Calling MCP tool...")
 
 	mcpServer := exec.Command(mcpBinary)
@@ -66,8 +69,7 @@ func callMcpTool() {
 	buf := make([]byte, 1024)
 	timeout := time.After(10 * time.Second)
 
-	payload := `{ "jsonrpc": "2.0", "method": "tools/call", "params": { "name": "hello_world", "arguments": { "name": "Fabien"} }, "id": 1}` + "\n"
-	_, err = io.WriteString(stdin, payload)
+	_, err = io.WriteString(stdin, payload+"\n")
 	if err != nil {
 		fmt.Println("Error writing to stdin:", err)
 		return
