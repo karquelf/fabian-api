@@ -42,10 +42,7 @@ func handleChatRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	listOfToolsPayload := `{ "jsonrpc": "2.0", "method": "tools/list", "params": {}, "id": -1 }`
-	toolsResponse := callMcpTool(listOfToolsPayload)
-
-	llmResponse := callLLM(payload.Message, toolsResponse)
+	llmResponse := callLLM(payload.Message)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(llmResponse))

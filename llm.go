@@ -22,7 +22,10 @@ func LLMClient() *openai.Client {
 	return clientInstance
 }
 
-func callLLM(message string, tools string) string {
+func callLLM(message string) string {
+	listOfToolsPayload := `{ "jsonrpc": "2.0", "method": "tools/list", "params": {}, "id": -1 }`
+	tools := callMcpTool(listOfToolsPayload)
+
 	models, err := LLMClient().Models.List(context.TODO())
 
 	if err != nil {
