@@ -12,6 +12,20 @@ type ChatPayload struct {
 	Time    int64
 }
 
+// CORS middleware to allow requests from http://localhost:8081
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:8081")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	http.HandleFunc("/text", handleTextRequest)
 	http.HandleFunc("/voice", handleVoiceRequest)
@@ -25,7 +39,7 @@ func main() {
 	})
 
 	fmt.Println("Run server on port 3000")
-	http.ListenAndServe((":3000"), nil)
+	http.ListenAndServe(":3000", corsMiddleware(http.DefaultServeMux))
 }
 
 func handleTextRequest(w http.ResponseWriter, r *http.Request) {
@@ -69,6 +83,8 @@ func handleVoiceRequest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Error transcribing audio: %v", err), http.StatusInternalServerError)
 		return
 	}
+
+	fmt.Println("Transcribed message:", message)
 
 	llmResponse := callLLM(message)
 
