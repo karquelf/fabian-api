@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 )
 
 type ChatPayload struct {
@@ -88,6 +89,18 @@ func handleVoiceRequest(w http.ResponseWriter, r *http.Request) {
 
 	llmResponse := callLLM(message)
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(llmResponse))
+	audioResponse, err := tts(llmResponse)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error generating audio response: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "audio/wav")
+	http.ServeFile(w, r, audioResponse)
+
+	defer func() {
+		if err := os.Remove(audioResponse); err != nil {
+			fmt.Println("Error removing temporary audio file:", err)
+		}
+	}()
 }
