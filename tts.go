@@ -8,14 +8,18 @@ import (
 	"io"
 	"net/http"
 	"os"
+
+	"github.com/pemistahl/lingua-go"
 )
 
 func tts(message string) (string, error) {
 	uid := generateUID()
 	outputFile := "tmp/out_" + uid + ".wav"
 
+	detectedLanguage := detectLanguage(message)
+
 	payload := map[string]string{
-		"language": "fr",
+		"language": detectedLanguage,
 		"text":     message,
 		"uid":      uid,
 	}
@@ -53,4 +57,23 @@ func generateUID() string {
 	b := make([]byte, 16)
 	rand.Read(b)
 	return fmt.Sprintf("%x", b)
+}
+
+func detectLanguage(text string) string {
+	languages := []lingua.Language{
+		lingua.English,
+		lingua.French,
+	}
+
+	detector := lingua.NewLanguageDetectorBuilder().
+		FromLanguages(languages...).
+		Build()
+
+	if language, exists := detector.DetectLanguageOf(text); exists {
+		if language == lingua.French {
+			return "fr"
+		}
+	}
+
+	return "en"
 }
