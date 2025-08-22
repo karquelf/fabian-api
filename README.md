@@ -7,7 +7,7 @@ go run .
 ```
 
 ```
-curl -i -H "Content-Type: application/json" -d '{ "message": "What time is it?" }'  http://localhost:3000
+curl -i -H "Content-Type: application/json" -d '{ "message": "What time is it?" }'  http://localhost:3000/text
 ```
 
 ```

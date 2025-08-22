@@ -10,12 +10,18 @@ import (
 	"github.com/openai/openai-go/option"
 )
 
+// lmstudio
+// const llmURL = "http://localhost:1234/v1"
+
+// ollama
+const llmURL = "http://localhost:11434/v1/"
+
 var clientInstance *openai.Client
 
 func LLMClient() *openai.Client {
 	if clientInstance == nil {
 		client := openai.NewClient(
-			option.WithBaseURL("http://localhost:1234/v1"),
+			option.WithBaseURL(llmURL),
 		)
 		clientInstance = &client
 	}
@@ -35,7 +41,7 @@ func callLLM(message string) string {
 	context := context.TODO()
 	chat := openai.ChatCompletionNewParams{
 		Messages: []openai.ChatCompletionMessageParamUnion{
-			openai.UserMessage(message),
+			openai.UserMessage(message + " /nothink"),
 		},
 		Model: string(models.Data[0].ID),
 		Tools: extractTools(tools),
